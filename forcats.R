@@ -98,6 +98,7 @@ rincome <- gss_cat %>%
     n = n()
   )
 
+# fct_reorderd - changing levels depends on the argument value 
 ggplot(rincome, aes(age, fct_reorder(rincome, age))) +
   geom_point()
 
@@ -114,7 +115,7 @@ by_age <- gss_cat %>%
 ggplot(by_age, aes(age, prop, color = marital)) +
   geom_line(na.rm = TRUE)
 
-# fct_reorder2 - ??
+# fct_reorder2 - similiar to fct_reorder
 ggplot(by_age, aes(age, prop, color = fct_reorder2(marital, age, prop))) + 
   geom_line() +
   labs(color = "marital")
@@ -127,7 +128,68 @@ gss_cat %>%
   geom_bar()
 
 # Ex 1
+summary(gss_cat$tvhours)
+
+ggplot(data = gss_cat, mapping = aes(y = tvhours)) +
+  geom_boxplot() +
+  coord_flip()
+
+# Answer: To find some extreme values better thought is to create "boxplot"
+# and evaluate the summary function - then we have the mean, mediadn, max, min etc. values.
+
 # Ex 2
-# Ex 3
+# tibble: gss_cat
+# factors: marital, race, rincome, partyid, relig, denom
+count(gss_cat, marital) %>%
+  arrange(desc(n))
+
+levels(gss_cat$marital)
 
 #### Modification of factors levels
+
+# fct_recode - changing the factor name for more accurate
+
+gss_cat %>%
+  mutate(partyid = fct_recode(partyid, 
+                              "Republican, strong" = "Strong republican",
+                              "Republican, weak" = "Not str republican",
+                              "Independent, near rep" = "Ind,near rep",
+                              "Independent, near dem" = "Ind,near dem",
+                              "Democrat, weak" = "Not str democrat",
+                              "Democrat, strong" = "Strong democrat",
+                              "Other" = "No answer",
+                              "Other" = "Don't know",
+                              "Other" = "Other party"
+                              )) %>%
+  count(partyid)
+# fct_collapse - similar to fct_recode
+
+gss_cat %>%
+  mutate(partyid = fct_collapse(partyid,
+                                other = c("No answer", "Don't know", "Other party"),
+                                rep = c("Strong republican", "Not str republican"),
+                                ind = c("Ind,near rep", "Independent", "Ind,near dem"),
+                                dem = c("Not str democrat", "Strong democrat"))) %>%
+  count(partyid)
+
+# fct_lump - gather all small groups of factors (low frequency value) and
+# showe only factors with high value of frequency and other
+
+gss_cat %>%
+  mutate(relig = fct_lump(relig, n = 10)) %>%
+  count(relig, sort = TRUE) %>%
+  print(n = Inf)
+
+# Exercises
+# Ex 2
+gss_cat %>%
+  mutate(rincome = fct_lump(rincome, n = 10)) %>%
+  count(rincome, sort = TRUE)
+
+gss_cat %>%
+  mutate(rincome = fct_collapse(rincome,
+                                `$20000 or more` = c("$25000 or more", "$20000 - 24999"),
+                                `$10000 - 19999` = c("$10000 - 14999", "$15000 - 19999"),
+                                `$1000 - 9999` = c("$1000 to 2999", "$3000 to 3999", "$4000 to 4999", "$5000 to 5999", "$6000 to 6999", "$7000 to 7999", "$8000 to 9999"),
+                                Other = c("Other", "Not applicable", "No answer", "Don't know", "Refused"))) %>%
+  count(rincome)
